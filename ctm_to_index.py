@@ -5,8 +5,9 @@ from lxml import etree
 # from collections import deque
 # import numpy as np
 
-def ctm_to_index(ctm_path, output=None):
+def ctm_to_index(ctm_name, output=None):
     index = []
+    ctm_path = 'lib/ctms/' + ctm_name + '.ctm'
     with open(ctm_path, 'r') as f:
         for line in f.readlines():
             if len(line.split()) == 6:
@@ -80,7 +81,8 @@ def query(index, queries_xml):
     return kws_results
 
 
-def kws_output(kws_results, output="output/reference2.xml"):
+def kws_output(kws_results, output_name):
+
     # create XML
     kwslist = etree.Element('kwslist')
     kwslist.set("kwlist_filename", "IARPA-babel202b-v1.0d_conv-dev.kwlist.xml")
@@ -111,7 +113,8 @@ def kws_output(kws_results, output="output/reference2.xml"):
         kwslist.append(detected_kwlist)
 
     tree = etree.ElementTree(kwslist)
-    tree.write(output, pretty_print=True, xml_declaration=False)
+    output_path = "output/" + output_name + ".xml"
+    tree.write(output_path, pretty_print=True, xml_declaration=False)
     return tree
 
 
@@ -119,10 +122,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Extract a CTM file')
     parser.add_argument('ctm', type=str,
-        help='Path to reference CTM')
+        help='Reference CTM Name')
     # parser.add_argument('--output', type=str,
         # help='Optinal output file')
     args = parser.parse_args()
     index = ctm_to_index(args.ctm)
     kws_results = query(index, 'lib/kws/queries.xml')
-    kws_output(kws_results)
+    kws_output(kws_results, args.ctm)
