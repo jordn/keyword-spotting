@@ -5,6 +5,7 @@ from lxml import etree
 # from collections import deque
 # import numpy as np
 
+
 def ctm_to_index(ctm_name, output=None):
     index = []
     ctm_path = 'lib/ctms/' + ctm_name + '.ctm'
@@ -26,7 +27,7 @@ def ctm_to_index(ctm_name, output=None):
 
 
 """Query an index with a list of key words, returns a dict of results"""
-def query(index, queries_xml):
+def query(index, queries_xml, morphs=None):
     tree = etree.parse(queries_xml)
     querylist = tree.getroot()
     kws_results = []
@@ -37,7 +38,13 @@ def query(index, queries_xml):
 
         kw_search = {"kwid": kwid, "hits": []}
         threshold = 1.0
-        tokens = kwtext.split()
+        phrase_split = kwtext.split()
+        tokens = []
+        if morphs:
+            for token in phrase_split:
+                tokens.extend(morphs.get(token, [token]))
+        else:
+            tokens = phrase_split
 
         if len(tokens) == 1:
             hits = filter(lambda entry: entry['token'].lower() == kwtext.lower(), index)
@@ -119,12 +126,9 @@ def kws_output(kws_results, output_name):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Extract a CTM file')
-    parser.add_argument('ctm', type=str,
-        help='Reference CTM Name')
-    # parser.add_argument('--output', type=str,
-        # help='Optinal output file')
+    parser = argparse.ArgumentParser(description='Extract a CTM file')
+    parser.add_argument('ctm', type=str, help='Reference CTM Name')
+    # parser.add_argument('--output', type=str, # help='Optinal output file')
     args = parser.parse_args()
     index = ctm_to_index(args.ctm)
     kws_results = query(index, 'lib/kws/queries.xml')
