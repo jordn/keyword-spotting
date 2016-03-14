@@ -70,10 +70,15 @@ def query(index, queries_xml, morphs=None):
         for i in start_entry_indexes:
             token_count, entry_count = 1, 1
             start_entry = index["transcript"][i]
-            duration = start_entry["duration"]
-            posterior = start_entry["posterior"]
+            entry = start_entry
+            duration = entry["duration"]
+            posterior = entry["posterior"]
+            last_end_time = start_entry["start"] + start_entry["duration"]
+            curr_time = entry["start"]
 
-            while (duration <= 0.5):
+            # TODO. Should we allow token insertion within a phrase? would simplify...
+            while (curr_time - last_end_time <= 0.5 and start_entry["filename"] == entry["filename"]):
+
                 if token_count == len(tokens):
                     # Success! Found the final token of the phrase within
                     hit = {
@@ -88,17 +93,16 @@ def query(index, queries_xml, morphs=None):
                     break
 
                 i += 1
-                entry = index["transcript"][i+1]
-
-                if start_entry["filename"] != entry["filename"]:
-                    break
-
+                entry = index["transcript"][i]
                 entry_count += 1
+                curr_time = entry["start"]
                 duration += entry["duration"]
                 posterior = (posterior * (entry_count-1) + entry['posterior'])/entry_count  # Mean of posteriors seen TODO change?
 
                 if entry["token"] == tokens[token_count]:
                     token_count += 1
+                    last_end_time = entry["start"] + entry["duration"]
+
 
         for hit in hits:
             if hit["posterior"] >= threshold:
