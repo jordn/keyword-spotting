@@ -2,12 +2,15 @@
 import argparse
 from copy import copy
 from lxml import etree
+from collections import defaultdict
 # from collections import deque
 # import numpy as np
 
 
 def ctm_to_index(ctm_name, output=None):
-    index = []
+    index = dict()
+    transcript = []
+    token_indexes = defaultdict(list)
     ctm_path = 'lib/ctms/' + ctm_name + '.ctm'
     with open(ctm_path, 'r') as f:
         for line in f.readlines():
@@ -20,9 +23,21 @@ def ctm_to_index(ctm_name, output=None):
                         "token": token.lower(),
                         "posterior": float(posterior),
                 }
-                index.append(entry)
+                i = len(transcript)
+                transcript.append(entry)
+                token_indexes[entry["token"]].append(i)
             else:
                 raise Exception("Unexpected formatting in CTM file")
+
+    index["transcript"] = transcript
+    index["token_indexes"] = token_indexes
+
+    # # Add key to each entry with the next token to speed up phrase search
+    # for i in range(len(transcript)-2, 0, -1):
+    #     entry = transcript[i]
+    #     if entry["filename"] == transcript[i+1]["filename"]:
+    #         entry["next"] = transcript[i+1]
+
     return index
 
 
@@ -35,46 +50,55 @@ def query(index, queries_xml, morphs=None):
     for kw in querylist:
         kwid = kw.values()[0]
         kwtext = kw.getchildren()[0].text
-
         kw_search = {"kwid": kwid, "hits": []}
         threshold = 1.0
-        phrase_split = kwtext.split()
+        phrase_split = kwtext.lower().split()
         tokens = []
         if morphs:
             for token in phrase_split:
+                if token not in morphs:
+                    print(token)  #TODO, should morphs have to come from the kws dict?
                 tokens.extend(morphs.get(token, [token]))
         else:
             tokens = phrase_split
 
-        if len(tokens) == 1:
-            hits = filter(lambda entry: entry['token'].lower() == kwtext.lower(), index)
-        else:
-            # Search through to find sequence of tokens that make a phrase
-            num_tokens = len(tokens)
-            hits = []
-            i, end_time, duration, posterior = 0, 0, 0, 0
-            for entry in index:
-                if entry['token'].lower() == tokens[i] and (end_time == 0 or entry['start'] <= end_time + 0.5):
-                    if i == 0:
-                        start = entry['start']
-                    i += 1;
-                    end_time = entry['start'] + entry['duration']
-                    duration += entry['duration'] #test
-                    posterior = (posterior*(i-1) + entry['posterior'])/i # Mean of posteriors seen TODO change?
-                    if i == num_tokens:
-                       # Made it to the end of the phrase.
-                        hit = {
-                            "filename": entry['filename'],
-                            "channel": entry['channel'],
-                            "start": float(start),
-                            "duration": duration,
-                            "token": kwtext,
-                            "posterior": float(posterior),
-                        }
-                        hits.append(hit)
-                        i, end_time, duration = 0, 0, 0
-                else:
-                    i, end_time, duration = 0, 0, 0
+        hits = []
+
+        # Follow the find sequence of tokens that match the phrase
+        start_entry_indexes = index["token_indexes"][tokens[0]]
+
+        for i in start_entry_indexes:
+            token_count, entry_count = 1, 1
+            start_entry = index["transcript"][i]
+            duration = start_entry["duration"]
+            posterior = start_entry["posterior"]
+
+            while (duration <= 0.5):
+                if token_count == len(tokens):
+                    # Success! Found the final token of the phrase within
+                    hit = {
+                        "filename": start_entry["filename"],
+                        "channel": start_entry["channel"],
+                        "start": start_entry["start"],
+                        "duration": duration,
+                        "token": kwtext,
+                        "posterior": posterior,
+                    }
+                    hits.append(hit)
+                    break
+
+                i += 1
+                entry = index["transcript"][i+1]
+
+                if start_entry["filename"] != entry["filename"]:
+                    break
+
+                entry_count += 1
+                duration += entry["duration"]
+                posterior = (posterior * (entry_count-1) + entry['posterior'])/entry_count  # Mean of posteriors seen TODO change?
+
+                if entry["token"] == tokens[token_count]:
+                    token_count += 1
 
         for hit in hits:
             if hit["posterior"] >= threshold:
@@ -132,4 +156,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     index = ctm_to_index(args.ctm)
     kws_results = query(index, 'lib/kws/queries.xml')
-    kws_output(kws_results, args.ctm)
+    # kws_output(kws_results, args.ctm)
