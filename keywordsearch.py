@@ -4,8 +4,6 @@ from copy import copy
 from lxml import etree
 from collections import defaultdict
 from morphdecompose import morph_dict
-# from collections import deque
-# import numpy as np
 
 def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
     index = dict()
@@ -161,21 +159,6 @@ def kws_output(kws_results, output_path):
     tree = etree.ElementTree(kwslist)
     tree.write(output_path, pretty_print=True, xml_declaration=False)
     return tree
-
-
-""" Given a KWS output XML, renormalise the scores for each hit """
-def normalise_kws_output(kws_path, output_path, gamma):
-    tree = etree.parse(kws_path)
-    kwslist = tree.getroot()
-
-    for detected_kwlist in kwslist:
-        sum_of_scores = sum([float(hit.get("score"))**gamma for hit in detected_kwlist])
-        for hit in detected_kwlist:
-            hit.set("score", str((float(hit.get("score"))**gamma)/sum_of_scores))
-
-    tree.write(output_path, pretty_print=True, xml_declaration=False)
-    return tree
-
 
 
 if __name__ == '__main__':

@@ -1,7 +1,5 @@
 #!/bin/python
 import argparse
-from lxml import etree
-
 
 def morph_dict(morph_path):
     morphs = dict()
