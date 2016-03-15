@@ -28,4 +28,4 @@ if __name__ == '__main__':
     parser.add_argument('gamma', type=str, default=1,
                         help='Parameter to exponentiate scores (default=1)')
     args = parser.parse_args()
-    tree = normalise_kws_output(args.kws_path, args.output_path, args.gamms)
+    tree = normalise_kws_output(args.kws_path, args.output_path, args.gamma)
