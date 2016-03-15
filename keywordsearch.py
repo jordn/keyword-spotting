@@ -1,11 +1,15 @@
 #!/bin/python
 import argparse
-from copy import copy
-from lxml import etree
 from collections import defaultdict
+
+from lxml import etree
+
 from morphdecompose import morph_dict
 
+
 def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
+    """Convert a CTM text file into an index for KWS"""
+
     index = dict()
     transcript = []
     token_indexes = defaultdict(list)
@@ -16,7 +20,8 @@ def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
     with open(ctm_path, 'r') as f:
         for line in f.readlines():
             if len(line.split()) == 6:
-                filename, channel, start, raw_duration, raw_token, posterior = line.split()
+                (filename, channel, start, raw_duration, raw_token,
+                 posterior) = line.split()
 
                 if morph_dict_path:
                     tokens = morphs[raw_token.lower()]
@@ -24,7 +29,7 @@ def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
                     tokens = [raw_token]
 
                 for token_index, token in enumerate(tokens):
-                    duration = float(raw_duration)/len(tokens)
+                    duration = float(raw_duration) / len(tokens)
                     start = float(start) + token_index * duration
 
                     entry = {
@@ -45,8 +50,7 @@ def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
         with open(output, 'w') as f:
             for entry in transcript:
                 f.write("{filename} {channel} {start:0.2f} {duration:0.3f} "
-                    "{token} {posterior:0.4f}\n".format(**entry))
-
+                        "{token} {posterior:0.4f}\n".format(**entry))
 
     index["transcript"] = transcript
     index["token_indexes"] = token_indexes
@@ -54,8 +58,9 @@ def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
     return index
 
 
-"""Query an index with a list of key words, returns a dict of results"""
 def query(index, queries_xml, morph_dict_path=None):
+    """Query an index with a list of key words, returns a dict of results"""
+
     tree = etree.parse(queries_xml)
     querylist = tree.getroot()
     kws_results = []
@@ -72,8 +77,6 @@ def query(index, queries_xml, morph_dict_path=None):
         if morph_dict_path:
             morphs = morph_dict(morph_dict_path)
             for token in phrase_split:
-                if token not in morphs:
-                    print(token)  #TODO, should morphs have to come from the kws dict?
                 tokens.extend(morphs.get(token, [token]))
         else:
             tokens = phrase_split
@@ -84,7 +87,7 @@ def query(index, queries_xml, morph_dict_path=None):
         start_entry_indexes = index["token_indexes"][tokens[0]]
 
         for i in start_entry_indexes:
-            token_count, entry_count = 1, 1
+            token_count = 1
             start_entry = index["transcript"][i]
             entry = start_entry
             duration = entry["duration"]
@@ -109,12 +112,14 @@ def query(index, queries_xml, morph_dict_path=None):
 
                 i += 1
                 entry = index["transcript"][i]
-                if entry["token"] == tokens[token_count] and entry["filename"] == start_entry["filename"]:
+                if (entry["token"] == tokens[token_count] and
+                        entry["filename"] == start_entry["filename"]):
                     curr_time = entry["start"]
                     if curr_time - last_end_time <= 0.5:
                         token_count += 1
                         duration += entry["duration"]
-                        posterior = (posterior*(token_count-1) + entry['posterior'])/token_count
+                        posterior = (posterior * (token_count - 1) +
+                                     entry['posterior']) / token_count
                         last_end_time = entry["start"] + entry["duration"]
                         continue
                 break
@@ -151,7 +156,7 @@ def kws_output(kws_results, output_path):
             detected_kwlist.append(kw)
 
         if not kw_search["hits"]:
-            # Set string as element content to force separate open and close tags
+            # Set string as element content to force open and close tags
             detected_kwlist.text = "\n"
 
         kwslist.append(detected_kwlist)
