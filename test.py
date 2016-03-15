@@ -1,6 +1,8 @@
 from keywordsearch import ctm_to_index, query, kws_output
 from normalise_kws import normalise_kws_output
 from morphdecompose import morph_dict
+from combine_kws import combine_kws
+
 from timeit import Timer
 import time
 import datetime
@@ -119,29 +121,68 @@ from helpers import subprocess_call
 
 # ################ STO
 
-normalise_kws_output('lib/kws/word.xml', 'output/word-gamma1.xml', 1)
-subprocess_call("rm -rf scoring/word-gamma1")
-subprocess_call("scripts/score.sh output/word-gamma1.xml scoring")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-gamma1.xml scoring all")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-gamma1.xml scoring iv")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-gamma1.xml scoring oov")
+# normalise_kws_output('lib/kws/word.xml', 'output/word-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/word-gamma1")
+# subprocess_call("scripts/score.sh output/word-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-gamma1.xml scoring oov")
 
-normalise_kws_output('lib/kws/word-sys2.xml', 'output/word-sys2-gamma1.xml', 1)
-subprocess_call("rm -rf scoring/word-sys2-gamma1")
-subprocess_call("scripts/score.sh output/word-sys2-gamma1.xml scoring")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-sys2-gamma1.xml scoring all")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-sys2-gamma1.xml scoring iv")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-sys2-gamma1.xml scoring oov")
+# normalise_kws_output('lib/kws/word-sys2.xml', 'output/word-sys2-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/word-sys2-gamma1")
+# subprocess_call("scripts/score.sh output/word-sys2-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-sys2-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-sys2-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/word-sys2-gamma1.xml scoring oov")
 
-normalise_kws_output('lib/kws/morph.xml', 'output/morph-gamma1.xml', 1)
-subprocess_call("rm -rf scoring/morph-gamma1")
-subprocess_call("scripts/score.sh output/morph-gamma1.xml scoring")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/morph-gamma1.xml scoring all")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/morph-gamma1.xml scoring iv")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/morph-gamma1.xml scoring oov")
+# normalise_kws_output('lib/kws/morph.xml', 'output/morph-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/morph-gamma1")
+# subprocess_call("scripts/score.sh output/morph-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/morph-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/morph-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/morph-gamma1.xml scoring oov")
+
+
+##################################################
+# Combination
+##################################################
+
+# combine_kws('output/decode.xml', 'output/decode-decomposed.xml', 'outputcombined/decode--decode-decomposed.xml')
+# subprocess_call("rm -rf scoringcombined/decode--decode-decomposed.xml")
+# subprocess_call("scripts/score.sh outputcombined/decode--decode-decomposed.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/decode--decode-decomposed.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/decode--decode-decomposed.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/decode--decode-decomposed.xml scoring oov")
+
+
+# normalise_kws_output('outputcombined/decode--decode-decomposed.xml', 'outputcombined/decode--decode-decomposed-gamma1.xml', 1)
+# subprocess_call("rm -rf scoringcombined/decode--decode-decomposed-gamma1.xml")
+# subprocess_call("scripts/score.sh outputcombined/decode--decode-decomposed-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/decode--decode-decomposed-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/decode--decode-decomposed-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/decode--decode-decomposed-gamma1.xml scoring oov")
 
 
 
+
+combine_kws('lib/kws/word.xml', 'lib/kws/word-sys2.xml', 'outputcombined/word--word-sys2.xml')
+combine_kws('lib/kws/morph.xml', 'lib/kws/word-sys2.xml', 'outputcombined/morph--word-sys2.xml')
+combine_kws('lib/kws/morph.xml', 'lib/kws/word.xml', 'outputcombined/morph--word.xml')
+combine_kws('lib/kws/morph--word.xml', 'lib/kws/word-sys2.xml', 'outputcombined/morph--word--word-sys2.xml')
+normalise_kws_output('outputcombined/morph--word--word-sys2.xml', 'outputcombined/morph--word--word-sys2-gamma1.xml', 1)
+subprocess_call("rm -rf scoringcombined/morph--word--word-sys2.xml")
+subprocess_call("scripts/score.sh outputcombined/morph--word--word-sys2.xml scoring")
+subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/morph--word--word-sys2.xml scoring all")
+subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/morph--word--word-sys2.xml scoring iv")
+subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/morph--word--word-sys2.xml scoring oov")
+
+
+
+subprocess_call("rm -rf scoringcombined/morph--word--word-sys2-gamma1.xml")
+subprocess_call("scripts/score.sh outputcombined/morph--word--word-sys2-gamma1.xml scoring")
+subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/morph--word--word-sys2-gamma1.xml scoring all")
+subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/morph--word--word-sys2-gamma1.xml scoring iv")
+subprocess_call("scripts/termselect.sh lib/terms/ivoov.map outputcombined/morph--word--word-sys2-gamma1.xml scoring oov")
 
 
 

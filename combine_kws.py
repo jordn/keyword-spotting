@@ -9,7 +9,6 @@ from lxml import etree
 #     kwslist = tree.getroot()
 
 
-
 def kw_overlap(kw1, kw2):
     """ Returns true if the two kw hits are pointing at the same reference """
     if kw1.get("file") == kw2.get("file"):
@@ -32,16 +31,23 @@ def combine_kws(kws1_path, kws2_path, output_path):
     tree2 = etree.parse(kws2_path)
     kwslist2 = tree2.getroot()
 
-    assert(len(kwslist1) == len(kwslist2))
+    for detected_kwlist1 in kwslist1:
 
-    for i, detected_kwlist1 in enumerate(kwslist1):
-        detected_kwlist2 = kwslist2[i]
+        # Find the same kwid in second list (sets may not be identical)
+        kwid = detected_kwlist1.get("kwid")
+        detected_kwlists2 = kwslist2.xpath("//detected_kwlist[@kwid='{}']".format(kwid))
+
+        assert len(detected_kwlists2) <= 1
+        detected_kwlist2 = detected_kwlists2[0]
+
         for kw1 in detected_kwlist1:
             for kw2 in detected_kwlist2:
                 if kw_overlap(kw1, kw2):
                     # Return the merge KW (use times from kw1, take sum of scores)
+                    # TODO, explore whether max or sum is best.
                     kw1.set("score", str(
-                        max(float(kw1.get("score")), float(kw2.get("score")))
+                        # max(float(kw1.get("score")), float(kw2.get("score")))
+                        float(kw1.get("score")) +  float(kw2.get("score"))
                     ))
                     detected_kwlist2.remove(kw2)
                     break
@@ -50,8 +56,18 @@ def combine_kws(kws1_path, kws2_path, output_path):
         for kw2 in detected_kwlist2:
             detected_kwlist1.append(kw2)
 
+        # detected_kwlist2 now empty. Remove so we can find any leftovers.
+        kwslist2.remove(detected_kwlist2)
+
+
+    # Add any remaining detected_kwlists to kwlist1
+    if len(kwslist2) > 0:
+        for detected_kwlist2 in kwslist2:
+            kwslist1.append(detected_kwlist2)
+
     tree1.write(output_path, pretty_print=True, xml_declaration=False)
     return tree1
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Combine KWS outputs')
