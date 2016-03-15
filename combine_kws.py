@@ -4,10 +4,6 @@ import copy
 
 from lxml import etree
 
-# def load_kws_results(kws_path):
-#     tree = etree.parse(kws_path)
-#     kwslist = tree.getroot()
-
 
 def kw_overlap(kw1, kw2):
     """ Returns true if the two kw hits are pointing at the same reference """
@@ -46,9 +42,7 @@ def combine_kws(kws1_path, kws2_path, output_path):
                 for kw2 in detected_kwlist2:
                     if kw_overlap(kw1, kw2):
                         # Return the merge KW (use times from kw1, take sum of scores)
-                        # TODO, explore whether max or sum is best.
                         kw1.set("score", str(
-                            # max(float(kw1.get("score")), float(kw2.get("score")))
                             float(kw1.get("score")) +  float(kw2.get("score"))
                         ))
                         detected_kwlist2.remove(kw2)
