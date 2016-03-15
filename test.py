@@ -1,4 +1,4 @@
-from keywordsearch import ctm_to_index, query, kws_output
+from keywordsearch import ctm_to_index, query, kws_output, normalise_kws_output
 from morphdecompose import morph_dict
 from timeit import Timer
 import time
@@ -51,21 +51,80 @@ from helpers import subprocess_call
 # subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph.xml scoring iv")
 # subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph.xml scoring oov")
 
-# Score normalisation (gamma = 1)
-index = ctm_to_index('lib/ctms/decode.ctm', 'lib/dicts/morph.dct', 'mylib/ctms/decode-decomposed.ctm')
-kws_results = query(index, 'lib/kws/queries.xml', 'lib/dicts/morph.kwslist.dct', True)
-kws_output(kws_results, 'decode-decomposed-gamma5')
-subprocess_call("rm -rf scoring/decode-decomposed-gamma5")
-subprocess_call("scripts/score.sh output/decode-decomposed-gamma5.xml scoring")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-decomposed-gamma5.xml scoring all")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-decomposed-gamma5.xml scoring iv")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-decomposed-gamma5.xml scoring oov")
+# ##########################################################################################
+# # Score normalisation (gamma = 1)
+############################################################################################
+# index = ctm_to_index('lib/ctms/reference.ctm')
+# kws_results = query(index, 'lib/kws/queries.xml')
+# kws_output(kws_results, 'output/reference.xml')
+# normalise_kws_output('output/reference.xml', 'output/reference-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/reference-gamma1")
+# subprocess_call("scripts/score.sh output/reference-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/reference-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/reference-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/reference-gamma1.xml scoring oov")
 
-index = ctm_to_index('lib/ctms/decode-morph.ctm')
-kws_results = query(index, 'lib/kws/queries.xml', 'lib/dicts/morph.kwslist.dct', True)
-kws_output(kws_results, 'decode-morph-gamma5')
-subprocess_call("rm -rf scoring/decode-morph-gamma5")
-subprocess_call("scripts/score.sh output/decode-morph-gamma5.xml scoring")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph-gamma5.xml scoring all")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph-gamma5.xml scoring iv")
-subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph-gamma5.xml scoring oov")
+# index = ctm_to_index('lib/ctms/decode.ctm')
+# kws_results = query(index, 'lib/kws/queries.xml')
+# kws_output(kws_results, 'output/decode.xml')
+# normalise_kws_output('output/decode.xml', 'output/decode-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/decode-gamma1")
+# subprocess_call("scripts/score.sh output/decode-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-gamma1.xml scoring oov")
+
+# index = ctm_to_index('lib/ctms/decode.ctm', 'lib/dicts/morph.dct', 'mylib/ctms/decode-decomposed.ctm')
+# kws_results = query(index, 'lib/kws/queries.xml', 'lib/dicts/morph.kwslist.dct', True)
+# kws_output(kws_results, 'output/decode-decomposed.xml')
+# normalise_kws_output('output/decode-decomposed.xml', 'output/decode-decomposed-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/decode-decomposed-gamma1")
+# subprocess_call("scripts/score.sh output/decode-decomposed-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-decomposed-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-decomposed-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-decomposed-gamma1.xml scoring oov")
+
+# index = ctm_to_index('lib/ctms/decode-morph.ctm')
+# kws_results = query(index, 'lib/kws/queries.xml', 'lib/dicts/morph.kwslist.dct')
+# kws_output(kws_results, 'output/decode-morph.xml')
+# normalise_kws_output('output/decode-morph.xml', 'output/decode-morph-gamma1.xml', 1)
+# subprocess_call("rm -rf scoring/decode-morph-gamma1")
+# subprocess_call("scripts/score.sh output/decode-morph-gamma1.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph-gamma1.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph-gamma1.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map output/decode-morph-gamma1.xml scoring oov")
+
+#############################################################################
+# IBM Systems
+#############################################################################
+
+# subprocess_call("rm -rf scoring/word")
+# subprocess_call("scripts/score.sh lib/kws/word.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/word.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/word.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/word.xml scoring oov")
+
+# subprocess_call("rm -rf scoring/word-sys2")
+# subprocess_call("scripts/score.sh lib/kws/word-sys2.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/word-sys2.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/word-sys2.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/word-sys2.xml scoring oov")
+
+# subprocess_call("rm -rf scoring/morph")
+# subprocess_call("scripts/score.sh lib/kws/morph.xml scoring")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/morph.xml scoring all")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/morph.xml scoring iv")
+# subprocess_call("scripts/termselect.sh lib/terms/ivoov.map lib/kws/morph.xml scoring oov")
+
+
+
+
+
+
+
+
+
+
+
+
+

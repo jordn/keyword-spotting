@@ -57,7 +57,7 @@ def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
 
 
 """Query an index with a list of key words, returns a dict of results"""
-def query(index, queries_xml, morph_dict_path=None, score_normalisation=False):
+def query(index, queries_xml, morph_dict_path=None):
     tree = etree.parse(queries_xml)
     querylist = tree.getroot()
     kws_results = []
@@ -104,6 +104,7 @@ def query(index, queries_xml, morph_dict_path=None, score_normalisation=False):
                         "duration": duration,
                         "token": kwtext,
                         "posterior": posterior,
+                        "decision": True  # Eval system will choose threshold.
                     }
                     hits.append(hit)
                     break
@@ -120,29 +121,13 @@ def query(index, queries_xml, morph_dict_path=None, score_normalisation=False):
                         continue
                 break
 
-
-        GAMMA = 1  # Tunable parameter to scale scores
-        THRESHOLD = 0  # Min score to classify as a hit
-        if score_normalisation:
-            sum_of_scores = sum([hit["posterior"]**GAMMA for hit in hits])
-
-        for hit in hits:
-
-            if score_normalisation:
-                # Sum to one constraint
-                hit["posterior"] = (hit["posterior"]**GAMMA)/sum_of_scores
-
-            # NB the evaluation system choses threshold for MTWV, however only
-            # considers hits where decision="YES"
-            hit["decision"] = True if hit["posterior"] >= THRESHOLD else False
-            kw_search["hits"].append(hit)
-
+        kw_search["hits"] = hits
         kws_results.append(kw_search)
 
     return kws_results
 
 
-def kws_output(kws_results, output_name):
+def kws_output(kws_results, output_path):
 
     # create XML
     kwslist = etree.Element('kwslist')
@@ -174,9 +159,23 @@ def kws_output(kws_results, output_name):
         kwslist.append(detected_kwlist)
 
     tree = etree.ElementTree(kwslist)
-    output_path = "output/" + output_name + ".xml"
     tree.write(output_path, pretty_print=True, xml_declaration=False)
     return tree
+
+
+""" Given a KWS output XML, renormalise the scores for each hit """
+def normalise_kws_output(kws_path, output_path, gamma):
+    tree = etree.parse(kws_path)
+    kwslist = tree.getroot()
+
+    for detected_kwlist in kwslist:
+        sum_of_scores = sum([float(hit.get("score"))**gamma for hit in detected_kwlist])
+        for hit in detected_kwlist:
+            hit.set("score", str((float(hit.get("score"))**gamma)/sum_of_scores))
+
+    tree.write(output_path, pretty_print=True, xml_declaration=False)
+    return tree
+
 
 
 if __name__ == '__main__':
