@@ -38,26 +38,28 @@ def combine_kws(kws1_path, kws2_path, output_path):
         detected_kwlists2 = kwslist2.xpath("//detected_kwlist[@kwid='{}']".format(kwid))
 
         assert len(detected_kwlists2) <= 1
-        detected_kwlist2 = detected_kwlists2[0]
 
-        for kw1 in detected_kwlist1:
+        if len(detected_kwlists2) == 1:
+            detected_kwlist2 = detected_kwlists2[0]
+
+            for kw1 in detected_kwlist1:
+                for kw2 in detected_kwlist2:
+                    if kw_overlap(kw1, kw2):
+                        # Return the merge KW (use times from kw1, take sum of scores)
+                        # TODO, explore whether max or sum is best.
+                        kw1.set("score", str(
+                            # max(float(kw1.get("score")), float(kw2.get("score")))
+                            float(kw1.get("score")) +  float(kw2.get("score"))
+                        ))
+                        detected_kwlist2.remove(kw2)
+                        break
+
+            # Add any leftover kw2s that didn't overlap
             for kw2 in detected_kwlist2:
-                if kw_overlap(kw1, kw2):
-                    # Return the merge KW (use times from kw1, take sum of scores)
-                    # TODO, explore whether max or sum is best.
-                    kw1.set("score", str(
-                        # max(float(kw1.get("score")), float(kw2.get("score")))
-                        float(kw1.get("score")) +  float(kw2.get("score"))
-                    ))
-                    detected_kwlist2.remove(kw2)
-                    break
+                detected_kwlist1.append(kw2)
 
-        # Add any leftover kw2s that didn't overlap
-        for kw2 in detected_kwlist2:
-            detected_kwlist1.append(kw2)
-
-        # detected_kwlist2 now empty. Remove so we can find any leftovers.
-        kwslist2.remove(detected_kwlist2)
+            # detected_kwlist2 now empty. Remove so we can find any leftovers.
+            kwslist2.remove(detected_kwlist2)
 
 
     # Add any remaining detected_kwlists to kwlist1
