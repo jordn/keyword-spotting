@@ -57,7 +57,7 @@ def ctm_to_index(ctm_path, morph_dict_path=None, output=None):
 
 
 """Query an index with a list of key words, returns a dict of results"""
-def query(index, queries_xml, morph_dict_path=None):
+def query(index, queries_xml, morph_dict_path=None, score_normalisation=False):
     tree = etree.parse(queries_xml)
     querylist = tree.getroot()
     kws_results = []
@@ -69,7 +69,6 @@ def query(index, queries_xml, morph_dict_path=None):
         kwid = kw.values()[0]
         kwtext = kw.getchildren()[0].text
         kw_search = {"kwid": kwid, "hits": []}
-        threshold = 0.1
         phrase_split = kwtext.lower().split()
         tokens = []
         if morph_dict_path:
@@ -116,17 +115,26 @@ def query(index, queries_xml, morph_dict_path=None):
                     if curr_time - last_end_time <= 0.5:
                         token_count += 1
                         duration += entry["duration"]
-                        posterior = (posterior * (token_count-1) + entry['posterior'])/token_count  # Mean of posteriors seen TODO change?
+                        posterior = (posterior*(token_count-1) + entry['posterior'])/token_count
                         last_end_time = entry["start"] + entry["duration"]
                         continue
                 break
 
 
+        GAMMA = 1  # Tunable parameter to scale scores
+        THRESHOLD = 0  # Min score to classify as a hit
+        if score_normalisation:
+            sum_of_scores = sum([hit["posterior"]**GAMMA for hit in hits])
+
         for hit in hits:
-            if hit["posterior"] >= threshold:
-                hit["decision"] = True
-            else:
-                hit["decision"] = False
+
+            if score_normalisation:
+                # Sum to one constraint
+                hit["posterior"] = (hit["posterior"]**GAMMA)/sum_of_scores
+
+            # NB the evaluation system choses threshold for MTWV, however only
+            # considers hits where decision="YES"
+            hit["decision"] = True if hit["posterior"] >= THRESHOLD else False
             kw_search["hits"].append(hit)
 
         kws_results.append(kw_search)
@@ -160,7 +168,7 @@ def kws_output(kws_results, output_name):
             detected_kwlist.append(kw)
 
         if not kw_search["hits"]:
-            # Set empty string as element content to force open and close tags
+            # Set string as element content to force separate open and close tags
             detected_kwlist.text = "\n"
 
         kwslist.append(detected_kwlist)
