@@ -1,6 +1,5 @@
 #!/bin/python
 import argparse
-import copy
 
 from lxml import etree
 
@@ -31,7 +30,8 @@ def combine_kws(kws1_path, kws2_path, output_path):
 
         # Find the same kwid in second list (sets may not be identical)
         kwid = detected_kwlist1.get("kwid")
-        detected_kwlists2 = kwslist2.xpath("//detected_kwlist[@kwid='{}']".format(kwid))
+        detected_kwlists2 = kwslist2.xpath(
+            "//detected_kwlist[@kwid='{}']".format(kwid))
 
         assert len(detected_kwlists2) <= 1
 
@@ -41,9 +41,8 @@ def combine_kws(kws1_path, kws2_path, output_path):
             for kw1 in detected_kwlist1:
                 for kw2 in detected_kwlist2:
                     if kw_overlap(kw1, kw2):
-                        # Return the merge KW (use times from kw1, take sum of scores)
                         kw1.set("score", str(
-                            float(kw1.get("score")) +  float(kw2.get("score"))
+                            float(kw1.get("score")) + float(kw2.get("score"))
                         ))
                         detected_kwlist2.remove(kw2)
                         break
@@ -54,7 +53,6 @@ def combine_kws(kws1_path, kws2_path, output_path):
 
             # detected_kwlist2 now empty. Remove so we can find any leftovers.
             kwslist2.remove(detected_kwlist2)
-
 
     # Add any remaining detected_kwlists to kwlist1
     if len(kwslist2) > 0:

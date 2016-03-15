@@ -1,6 +1,7 @@
 #!/bin/python
 import argparse
 
+
 def morph_dict(morph_path):
     morphs = dict()
     with open(morph_path, 'r') as f:
@@ -11,7 +12,8 @@ def morph_dict(morph_path):
     return morphs
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Morphologically decompose a CTM file')
+    parser = argparse.ArgumentParser(
+        description='Morphologically decompose a CTM file')
     parser.add_argument('ctm', type=str, help='Reference CTM Name')
     parser.add_argument('--output', type=str, help='Optional output file')
     args = parser.parse_args()
